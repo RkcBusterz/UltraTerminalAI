@@ -22,6 +22,13 @@ const rl = readline.createInterface({
   prompt: getPrompt(),
 });
 
+console.log(chalk.magenta.bold("\n=== UltraTerminalAI ==="));
+console.log(
+  chalk.red(
+    "AI can make mistakes. Use with caution! Also review the commands before executing. We will try to fix any issues if you report.\n"
+  )
+);
+
 console.log(chalk.cyan("🚀 UltraTerminalAI started. Type 'exit' to quit."));
 console.log(chalk.yellow("💡 Type /help to see available commands.\n"));
 rl.prompt();
