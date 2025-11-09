@@ -42,26 +42,16 @@ If you already have an API key from a previous session or plan, use:
 
 ---
 
-## 💳 Billing & Plans
+## 💳 Billing & Management
 
-UltraTerminalAI runs on the **UltraVM AI Platform**.  
-Each user requires an active plan to access AI tokens.
+UltraTerminalAI runs on the **UltraVM AI Platform**, and each user requires an active plan to access AI tokens.
 
 ### 🌐 Billing Portal
 Visit the official billing portal to:
-- Purchase an API plan  
-- Upgrade or renew your subscription  
-- View your token usage and remaining balance  
-- Manage multiple API keys
+- Purchase or renew your AI plan  
+- Manage your existing API keys  
 
 👉 **[https://billing.ultravm.tech](https://billing.ultravm.tech)**
-
-### 🧾 Available Plans (Example)
-| Plan | Tokens | Validity | Price (INR) |
-|------|---------|-----------|--------------|
-| Starter | 50,000 | 30 Days | ₹99 |
-| Standard | 250,000 | 30 Days | ₹299 |
-| Pro | 1,000,000 | 30 Days | ₹999 |
 
 Once a plan is purchased, your API key will automatically get activated.  
 If you lose access, you can always generate a new one with `/getapi`.
@@ -84,14 +74,9 @@ If you encounter issues or unexpected behavior, please report it to the UltraVM 
 
 ```bash
 uvmai
-> check which process is using port 25590
 ```
 
-AI might respond with:
-```bash
-sudo lsof -i :25590
-```
-and will run it safely after user confirmation.
+That’s it — your AI terminal assistant is ready to help you!
 
 ---
 
