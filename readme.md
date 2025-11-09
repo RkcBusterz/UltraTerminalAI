@@ -98,7 +98,7 @@ That’s it — your AI terminal assistant is ready to help you!
 - **Command:** `uvmai`  
 - **Version:** `1.0.0` *(update as needed)*  
 - **Author:** UltraVM Technologies  
-- **License:** MIT  
+- **License:** All Rights Reserved  
 - **Website:** [https://ultravm.tech](https://ultravm.tech)  
 
 ---
