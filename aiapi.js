@@ -1,5 +1,6 @@
-require("dotenv").config();
-const fs = require('fs')
+import "dotenv/config";
+import fs from "fs";
+import fetch from "node-fetch";
 
 backendurl = "https://aiterminal.ultravm.in"
 async function askAI(prompt) {
