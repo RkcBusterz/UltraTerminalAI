@@ -10,12 +10,12 @@ export async function askAI(prompt) {
 
   try {
     const response = await fetch(`${backendurl}/api`, {
-      method: "GET",
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
-        auth: API_TOKEN,
-        message: encodeURIComponent(prompt),
+        auth: API_TOKEN
       },
+      body: JSON.stringify({ message: prompt }) // ✅ send prompt in body
     });
 
     if (!response.ok) {
@@ -24,12 +24,17 @@ export async function askAI(prompt) {
     }
 
     const data = await response.json();
-    return data;
+    return data; // same return structure as before
   } catch (err) {
     console.error("❌ askAI error:", err.message);
-    return "⚠️ Failed to connect to AI server.";
+    return {
+      output: "⚠️ Failed to connect to AI server.",
+      command: null,
+      end: true
+    };
   }
 }
+
 
 export async function generateToken() {
   const response = await fetch(`${backendurl}/createtoken`);
