@@ -103,3 +103,34 @@ export function getExistingToken() {
     return null;
   }
 }
+
+// -----------------------------
+// 📊 GET TOKEN INFO
+// -----------------------------
+export async function getTokenInfo() {
+  const API_TOKEN = process.env.API_TOKEN;
+  if (!API_TOKEN) {
+    console.log("❌ Missing API_TOKEN in .env file");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${backendurl}/tokeninfo`, {
+      method: "GET",
+      headers: { auth: API_TOKEN }
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`❌ Failed to fetch token info: ${response.status} - ${errText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    // Expected format: { used: 100, limit: 5000, remaining: 4900 }
+    return data;
+  } catch (err) {
+    console.error("❌ Error fetching token info:", err.message);
+    return null;
+  }
+}

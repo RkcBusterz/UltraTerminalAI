@@ -4,13 +4,12 @@ import chalk from "chalk";
 import os from "os";
 import fs from "fs";
 import process from "process";
-import { askAI, generateToken, getExistingToken } from "./aiapi.js";
+import { askAI, generateToken, getExistingToken, getTokenInfo } from "./aiapi.js";
 import { runCommand } from "./executor.js";
 import { addToHistory, getHistoryText } from "./history.js";
 import { parseAIResponse } from "./parseResponse.js";
 
 let aiBusy = false;
-const CHAT_LOG_FILE = "chat_history.txt"; // 📄 File to store chat messages
 
 function getPrompt() {
   const cwd = process.cwd();
@@ -44,15 +43,11 @@ async function askConfirm(question) {
   });
 }
 
-// 📥 Helper to save chat logs to file
+// 🧠 Store chat history in memory only
+const chatHistory = [];
 function saveChat(user, ai) {
-  const timestamp = new Date().toLocaleString();
-  const formatted = `\n[${timestamp}]\n👤 User: ${user}\n🤖 AI: ${ai}\n${"-".repeat(60)}\n`;
-  try {
-    fs.appendFileSync(CHAT_LOG_FILE, formatted, "utf8");
-  } catch (err) {
-    console.error("⚠️ Failed to write chat log:", err.message);
-  }
+  chatHistory.push({ user, ai });
+  if (chatHistory.length > 50) chatHistory.shift(); // keep last 50 only
 }
 
 rl.on("line", async (line) => {
@@ -75,6 +70,7 @@ rl.on("line", async (line) => {
     console.log(chalk.yellow("  !<command>") + chalk.white(" - Run a terminal command manually"));
     console.log(chalk.yellow("  /generateapi") + chalk.white(" - Generate and save a new API token (rate-limited)"));
     console.log(chalk.yellow("  /getapi") + chalk.white("      - Show your existing saved API token"));
+    console.log(chalk.yellow("  /tokeninfo") + chalk.white(" - Show your token usage, limit, and remaining tokens"));
     console.log(chalk.yellow("  /setapi <token>") + chalk.white(" - Manually set an API token"));
     console.log(chalk.yellow("  /help") + chalk.white("         - Show this help message"));
     console.log(chalk.yellow("  exit") + chalk.white("          - Quit UltraTerminalAI\n"));
@@ -110,6 +106,26 @@ rl.on("line", async (line) => {
     const token = getExistingToken();
     if (!token) {
       console.log(chalk.yellow("⚠️ No token found. Use /generateapi to create one."));
+    }
+    rl.prompt();
+    return;
+  }
+
+  // 📊 /tokeninfo → fetch token status from backend
+  if (input === "/tokeninfo") {
+    console.log(chalk.cyan("📊 Fetching token info..."));
+    try {
+      const info = await getTokenInfo();
+      if (info) {
+        console.log(chalk.green("\n✅ Current Token Status:"));
+        console.log(chalk.yellow(`  Used: ${info.used}`));
+        console.log(chalk.yellow(`  Limit: ${info.limit}`));
+        console.log(chalk.cyan(`  Remaining: ${info.remaining}\n`));
+      } else {
+        console.log(chalk.red("❌ Failed to fetch token info. Check your API key."));
+      }
+    } catch (err) {
+      console.log(chalk.red(`❌ Error fetching token info: ${err.message}`));
     }
     rl.prompt();
     return;
@@ -195,7 +211,7 @@ async function handleAIFlow(userInput) {
 
     console.log(chalk.blueBright(`\n🤖 ${ai.output}\n`));
 
-    // 📝 Save conversation to chat_history.txt
+    // Store in-memory only (not file)
     saveChat(userInput, ai.output);
 
     if (ai.command && typeof ai.command === "string" && ai.command.trim() !== "") {
