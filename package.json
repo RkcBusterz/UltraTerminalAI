@@ -1,6 +1,6 @@
 {
   "name": "uvm-terminal-ai",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "UVM Terminal AI (uvmai) - A global command-line AI assistant with integrated terminal control.",
   "main": "cmdline.js",
   "bin": {
