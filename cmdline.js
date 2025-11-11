@@ -4,12 +4,13 @@ import chalk from "chalk";
 import os from "os";
 import fs from "fs";
 import process from "process";
-import { askAI, generateToken, getExistingToken } from "./aiapi.js"; // <-- UPDATED
+import { askAI, generateToken, getExistingToken } from "./aiapi.js";
 import { runCommand } from "./executor.js";
 import { addToHistory, getHistoryText } from "./history.js";
 import { parseAIResponse } from "./parseResponse.js";
 
 let aiBusy = false;
+const CHAT_LOG_FILE = "chat_history.txt"; // 📄 File to store chat messages
 
 function getPrompt() {
   const cwd = process.cwd();
@@ -24,11 +25,8 @@ const rl = readline.createInterface({
 
 console.log(chalk.magenta.bold("\n=== UltraTerminalAI ==="));
 console.log(
-  chalk.red(
-    "AI can make mistakes. Use with caution! Always review commands before executing.\n"
-  )
+  chalk.red("AI can make mistakes. Use with caution! Always review commands before executing.\n")
 );
-
 console.log(chalk.cyan("🚀 UltraTerminalAI started. Type 'exit' to quit."));
 console.log(chalk.yellow("💡 Type /help to see available commands.\n"));
 rl.prompt();
@@ -44,6 +42,17 @@ async function askConfirm(question) {
       resolve(answer);
     });
   });
+}
+
+// 📥 Helper to save chat logs to file
+function saveChat(user, ai) {
+  const timestamp = new Date().toLocaleString();
+  const formatted = `\n[${timestamp}]\n👤 User: ${user}\n🤖 AI: ${ai}\n${"-".repeat(60)}\n`;
+  try {
+    fs.appendFileSync(CHAT_LOG_FILE, formatted, "utf8");
+  } catch (err) {
+    console.error("⚠️ Failed to write chat log:", err.message);
+  }
 }
 
 rl.on("line", async (line) => {
@@ -185,6 +194,9 @@ async function handleAIFlow(userInput) {
         : responseText;
 
     console.log(chalk.blueBright(`\n🤖 ${ai.output}\n`));
+
+    // 📝 Save conversation to chat_history.txt
+    saveChat(userInput, ai.output);
 
     if (ai.command && typeof ai.command === "string" && ai.command.trim() !== "") {
       ai.command = ai.command.replace(/^"+|"+$/g, "").trim();
