@@ -28,17 +28,38 @@ UltraTerminalAI requires an **API key** to connect with the UltraVM AI service.
 ### 🪄 Generate a new API key
 Run:
 ```bash
+/generateapi
+```
+
+This command will:
+- Request a **new API key** from the UltraVM AI backend  
+- Automatically **save it to your `.env` file**  
+- Respect the **12-hour rate limit** per IP (you can only generate once every 12 hours)  
+
+If the rate limit is reached, you’ll see:
+```
+⚠️ Rate limit reached. You can generate a new token again in 10h 23m.
+```
+
+---
+
+### 🔑 View your existing API key
+If you already have a key saved, you can check it using:
+```bash
 /getapi
 ```
 
-This will create a new API key and show it on your screen.  
-Use this key to activate your access and start using the AI.
+This will simply display the currently stored API token from your `.env` file — it does **not** request a new one.
 
-### 🔑 Use an existing API key
-If you already have an API key from a previous session or plan, use:
+---
+
+### ✏️ Manually set an API key
+If you already have a valid key from the billing system, set it manually:
 ```bash
 /setapi <your_api_key_here>
 ```
+
+This updates your `.env` file and environment instantly.
 
 ---
 
@@ -54,7 +75,7 @@ Visit the official billing portal to:
 👉 **[https://billing.ultravm.tech](https://billing.ultravm.tech)**
 
 Once a plan is purchased, your API key will automatically get activated.  
-If you lose access, you can always generate a new one with `/getapi`.
+If it expires, renew your plan and regenerate a new one with `/generateapi`.
 
 ---
 
@@ -65,8 +86,8 @@ AI can make mistakes. Use with caution!
 Always review commands before executing them.
 ```
 
-UltraTerminalAI has permission to execute system commands, so **verify every action before confirming**.  
-If you encounter issues or unexpected behavior, please report it to the UltraVM support team.
+UltraTerminalAI can execute real system commands — **verify each action before confirming**.  
+If you encounter issues or unexpected behavior, report them to the **UltraVM support team**.
 
 ---
 
@@ -76,7 +97,15 @@ If you encounter issues or unexpected behavior, please report it to the UltraVM 
 uvmai
 ```
 
-That’s it — your AI terminal assistant is ready to help you!
+Sample session:
+```
+UltraTerminalAI : ~/projects> /generateapi
+✅ New API token generated and saved to .env
+
+UltraTerminalAI : ~/projects> How to list all Docker containers?
+🤖 Run this command:
+docker ps -a
+```
 
 ---
 
@@ -85,9 +114,10 @@ That’s it — your AI terminal assistant is ready to help you!
 - 🤖 AI-powered assistant inside terminal  
 - 🧩 Execute terminal commands safely  
 - 💬 Natural language understanding  
-- 🔐 Secure API key management  
+- 🔐 Secure API key generation & management  
+- ⚡ Rate-limited `/generateapi` for security  
 - ☁️ UltraVM billing integration  
-- 🧠 Automatic usage tracking and token limits  
+- 🧠 Automatic token usage tracking  
 - 🕒 Cleans inactive API keys after 7 days  
 
 ---
