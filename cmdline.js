@@ -1,10 +1,10 @@
-#!/usr/bin/env node
+// #!/usr/bin/env node
 import readline from "readline";
 import chalk from "chalk";
 import os from "os";
 import fs from "fs";
 import process from "process";
-import { askAI, generateToken } from "./aiapi.js";
+import { askAI, generateToken, getExistingToken } from "./aiapi.js"; // <-- UPDATED
 import { runCommand } from "./executor.js";
 import { addToHistory, getHistoryText } from "./history.js";
 import { parseAIResponse } from "./parseResponse.js";
@@ -25,7 +25,7 @@ const rl = readline.createInterface({
 console.log(chalk.magenta.bold("\n=== UltraTerminalAI ==="));
 console.log(
   chalk.red(
-    "AI can make mistakes. Use with caution! Also review the commands before executing. We will try to fix any issues if you report.\n"
+    "AI can make mistakes. Use with caution! Always review commands before executing.\n"
   )
 );
 
@@ -60,30 +60,53 @@ rl.on("line", async (line) => {
     return;
   }
 
+  // 🧭 Help
   if (input === "/help") {
     console.log(chalk.cyan("\n📖 Available Commands:"));
     console.log(chalk.yellow("  !<command>") + chalk.white(" - Run a terminal command manually"));
-    console.log(chalk.yellow("  /getapi") + chalk.white("   - Generate and save a new API token"));
+    console.log(chalk.yellow("  /generateapi") + chalk.white(" - Generate and save a new API token (rate-limited)"));
+    console.log(chalk.yellow("  /getapi") + chalk.white("      - Show your existing saved API token"));
     console.log(chalk.yellow("  /setapi <token>") + chalk.white(" - Manually set an API token"));
-    console.log(chalk.yellow("  /help") + chalk.white("      - Show this help message"));
-    console.log(chalk.yellow("  exit") + chalk.white("       - Quit UltraTerminalAI\n"));
+    console.log(chalk.yellow("  /help") + chalk.white("         - Show this help message"));
+    console.log(chalk.yellow("  exit") + chalk.white("          - Quit UltraTerminalAI\n"));
     rl.prompt();
     return;
   }
 
-  if (input === "/getapi") {
+  // 🔐 /generateapi → Get new token, write to .env (unless rate-limited)
+  if (input === "/generateapi") {
     console.log(chalk.cyan("🔐 Requesting new API token..."));
     try {
-      const token = await generateToken();
-      console.log(chalk.green("✅ New API token generated and saved to .env:"));
-      console.log(chalk.yellow(token));
+      const result = await generateToken();
+
+      if (result.rateLimited) {
+        console.log(chalk.yellow(`⚠️ ${result.message}`));
+        console.log(chalk.gray("(Token not saved due to rate limit.)"));
+      } else if (result.token) {
+        console.log(chalk.green("✅ New API token generated and saved to .env:"));
+        console.log(chalk.yellow(result.token));
+      } else {
+        console.log(chalk.red("❌ Failed to generate a valid token."));
+      }
     } catch (err) {
-      console.log(chalk.red(`❌ Failed to generate token: ${err.message}`));
+      console.log(chalk.red(`❌ Error generating token: ${err.message}`));
     }
     rl.prompt();
     return;
   }
 
+  // 🔑 /getapi → Show existing token (no API call)
+  if (input === "/getapi") {
+    console.log(chalk.cyan("📄 Showing current saved API token..."));
+    const token = getExistingToken();
+    if (!token) {
+      console.log(chalk.yellow("⚠️ No token found. Use /generateapi to create one."));
+    }
+    rl.prompt();
+    return;
+  }
+
+  // ✏️ /setapi <token> → manually update .env
   if (input.startsWith("/setapi")) {
     const token = input.split(" ")[1];
     if (!token) {
@@ -92,7 +115,7 @@ rl.on("line", async (line) => {
       return;
     }
     try {
-      let env = fs.readFileSync(".env", "utf8");
+      let env = fs.existsSync(".env") ? fs.readFileSync(".env", "utf8") : "";
       if (env.includes("API_TOKEN=")) {
         env = env.replace(/API_TOKEN=.*/g, `API_TOKEN=${token}`);
       } else {
@@ -109,6 +132,7 @@ rl.on("line", async (line) => {
     return;
   }
 
+  // ⚙️ Run terminal command manually
   if (input.startsWith("!")) {
     const cmd = input.slice(1).trim();
     if (!cmd) {
@@ -133,6 +157,7 @@ rl.on("line", async (line) => {
     return;
   }
 
+  // 💬 AI processing
   aiBusy = true;
   await handleAIFlow(input);
   aiBusy = false;
@@ -151,19 +176,21 @@ async function handleAIFlow(userInput) {
   let running = true;
   rl.pause();
   console.log(chalk.gray("⏳ [AI PROCESSING...]"));
+
   while (running) {
     const responseText = await askAI(prompt);
     const ai =
       typeof responseText === "string"
         ? parseAIResponse(responseText)
         : responseText;
+
     console.log(chalk.blueBright(`\n🤖 ${ai.output}\n`));
+
     if (ai.command && typeof ai.command === "string" && ai.command.trim() !== "") {
       ai.command = ai.command.replace(/^"+|"+$/g, "").trim();
       console.log(chalk.yellow(`⚙️ Suggested command: ${ai.command}`));
-      const confirm = await askConfirm(
-        "Press [Enter] to run, or [SPACE] + [Enter] to skip: "
-      );
+
+      const confirm = await askConfirm("Press [Enter] to run, or [SPACE] + [Enter] to skip: ");
       if (confirm.includes(" ")) {
         console.log(chalk.yellow("⏩ Skipped command."));
         prompt = `User skipped running command: ${ai.command}\nAI, what next?`;
@@ -185,6 +212,7 @@ async function handleAIFlow(userInput) {
     } else {
       prompt = `AI said: ${ai.output}\nWhat next?`;
     }
+
     running = !ai.end;
     if (!running) {
       console.log(chalk.green("\n✅ AI finished. You can type again.\n"));
