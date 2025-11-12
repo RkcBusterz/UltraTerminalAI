@@ -9,6 +9,12 @@ import { runCommand } from "./executor.js";
 import { addToHistory, getHistoryText } from "./history.js";
 import { parseAIResponse } from "./parseResponse.js";
 
+// 🧠 Unified chat + command + output history storage
+function saveChat(user, ai) {
+  const formattedChat = `User: ${user}\nAI: ${ai}`;
+  addToHistory(user, formattedChat);
+}
+
 let aiBusy = false;
 
 function getPrompt() {
@@ -41,13 +47,6 @@ async function askConfirm(question) {
       resolve(answer);
     });
   });
-}
-
-// 🧠 Store chat history in memory only
-const chatHistory = [];
-function saveChat(user, ai) {
-  chatHistory.push({ user, ai });
-  if (chatHistory.length > 50) chatHistory.shift(); // keep last 50 only
 }
 
 rl.on("line", async (line) => {
@@ -197,7 +196,10 @@ rl.on("close", () => {
 });
 
 async function handleAIFlow(userInput) {
-  let prompt = `User: ${userInput}\nSystem Info: ${os.platform()} (${os.release()})\nHistory:\n${getHistoryText()}`;
+  let prompt = `User: ${userInput}
+System Info: ${os.platform()} (${os.release()})
+History:
+${getHistoryText()}`;
   let running = true;
   rl.pause();
   console.log(chalk.gray("⏳ [AI PROCESSING...]"));
@@ -211,7 +213,7 @@ async function handleAIFlow(userInput) {
 
     console.log(chalk.blueBright(`\n🤖 ${ai.output}\n`));
 
-    // Store in-memory only (not file)
+    // 🧠 Log chat + AI output into unified history
     saveChat(userInput, ai.output);
 
     if (ai.command && typeof ai.command === "string" && ai.command.trim() !== "") {
