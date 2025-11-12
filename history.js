@@ -3,8 +3,7 @@ const history = [];
 export function addToHistory(cmd, output) {
   history.push({ cmd, output });
 
-  // Keep only the last 20 entries in memory
-  if (history.length > 20) history.shift();
+  if (history.length > 35) history.shift();
 }
 
 export function getHistoryText() {
